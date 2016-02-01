@@ -1,0 +1,100 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netdb.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/uio.h>
+#include <sstream>
+#include <vector>
+#include <cstring>
+#include <string.h>
+#include <fcntl.h>
+#include <ctime>
+
+#define MAXUSER 5
+#define EXIT_STR "exit\r\n"
+using namespace std;
+
+#include "clientJob.h"
+
+#define SERVER_IP 	"140.113.167.78"
+#define SERVER_PORT	2048
+
+#define MAX_MSG_LEN 2
+
+void handleCommand(int commandType){
+	if(commandType == (int)COPY_OLD){
+		
+	}else if(commandType == (int)RELOAD_OLD){
+	
+	}else if(commandType == (int)RELOAD_NEW){
+	
+	}else;
+};
+
+int main(){
+
+	int                 unsend, len, SERVER_PORT, i;
+	int                 client_fd = -1;
+	struct sockaddr_in  client_sin;
+	struct hostent		*he;
+	
+	
+	// initialize this server info
+	he = gethostbyname(SERVER_IP);
+	client_fd = socket(AF_INET,SOCK_STREAM,0);
+	
+	memset(&client_sin, 0, sizeof(client_sin)); 
+	client_sin.sin_family = AF_INET;
+	client_sin.sin_addr = *((struct in_addr *)he->h_addr); 
+	client_sin.sin_port = htons(SERVER_PORT);
+	
+
+	
+	// set non-blocking
+	int maxfd = 0;
+		
+	// connect to server now
+	if(client_fd == -1) continue;
+		
+	// setting non-blocking socket
+	int flags;
+	if (-1 == (flags = fcntl(client_fd, F_GETFL, 0)))
+		flags = 0;
+	fcntl(client_fd, F_SETFL, flags | O_NONBLOCK);
+	
+	// find max fd
+	if(client_fd > maxfd) maxfd = client_fd;
+	
+	// keep connecting sockfd
+	while(1){
+		if(connect(client_fd,(struct sockaddr *)&client_sin[i],sizeof(client_sin)) == -1) {
+			//cerr << "connect fail for user#: " << i << "\n";
+		}else{
+			//cerr << "connect success for user#: " << i << "\n";
+			break; // connect successfully
+		}
+	}	
+	
+	
+	char msg[MAX_MSG_LEN];
+	while(1){
+		// read msg from server
+		read(client_fd,msg,MAX_MSG_LEN);
+		handleCommand((int)(msg[0]-'0'));
+		
+		// DQN
+		
+		
+		// write gradient to server
+		int randomSleepTime = rand()%1000000;
+		usleep(randomSleepTime);
+		
+		write(client_fd, "descent!", strlen("descent!")+1);
+	}
+	
+	return 0;
+}
