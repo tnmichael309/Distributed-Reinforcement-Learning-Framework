@@ -12,7 +12,15 @@ int clientInfo::getFD(){
 string clientInfo::getIP(){
 	return clientIP;
 }
-	
+
+void clientInfo::setIsFirst(bool isFirst){
+	m_isFirstInIP = isFirst;
+}
+
+bool clientInfo::isFirst(){
+	return m_isFirstInIP;
+}
+
 void server::handleShutdown(int sig){
 	if(staticListenerD)
 		close(staticListenerD);
@@ -83,11 +91,17 @@ void server::start(int port)
 				// maintain client info
 				clientInfo c;
 				c.setInfo(clntIP, ssock);
+				c.setIsFirst(true);
 				m_clientInfos.push_back(c);
+				for(int i = 0; i < m_clientInfos.size() - 1; i++){ // does not check itself: last one
+					if(m_clientInfos[i].getIP() == string(clntIP)){
+						m_clientInfos[m_clientInfos.size() - 1].setIsFirst(false);
+					}
+				}
 				
 				// init client
 				initClient(m_clientInfos.size()-1);
-	
+				
 				FD_SET(ssock, &afds);
 			}
 		}
@@ -97,6 +111,14 @@ void server::start(int port)
 			int fd = m_clientInfos[i].getFD();
 			if (FD_ISSET(fd, &rfds)) {
 				if(-1 == handleClient(i)){
+				
+					for(int j = 0; j < m_clientInfos.size(); j++){ // does not check itself: last one
+						if(m_clientInfos[j].getIP() == m_clientInfos[i].getIP()){
+							m_clientInfos[j].setIsFirst(true);
+							break;
+						}
+					}
+					
 					close(fd);
 					FD_CLR(fd, &afds); 
 					
@@ -157,7 +179,9 @@ int server::handleClient(int id)
 	
 	// do gradient descent
 	char msg[1000];
-	read(m_clientInfos[id].getFD(), msg, 1000);
+	int n = read(m_clientInfos[id].getFD(), msg, 1000);
+	if(n == -1) return -1;
+	
 	cout << "Server received: " << msg << endl;
 	
 	
@@ -186,18 +210,26 @@ void server::updateClientWithNewWeights(int id){
 	
 
 	// copy to the first process in that IP
-	sendMessageToClient(0, (char)(UPDATE_NEW + '0'));
-	int read_fd;
-	struct stat stat_buf;
-	off_t offset = 0;
+	for(int i = 0; i < m_clientInfos.size(); i++){
+		if(m_clientInfos[i].isFirst()){
+			sendMessageToClient(i, (char)(UPDATE_NEW + '0'));
+			int read_fd;
+			struct stat stat_buf;
+			off_t offset = 0;
+			
+			read_fd = open (WEIGHT_FILE_NAME.c_str(), O_RDONLY); // Open the input file. 
+			
+			fstat (read_fd, &stat_buf); // Stat the input file to obtain its size.
 	
-	read_fd = open (WEIGHT_FILE_NAME.c_str(), O_RDONLY); // Open the input file. 
+			sendfile (m_clientInfos[i].getFD(), read_fd, &offset, stat_buf.st_size); // Blast the bytes from one file to the other.
+			sendMessageToClient(i, (char)(EOF));
+			
+			close (read_fd);
+		}
+	}
+		
 	
-	fstat (read_fd, &stat_buf); // Stat the input file to obtain its size.
-	
-	sendfile (m_clientInfos[0].getFD(), read_fd, &offset, stat_buf.st_size); // Blast the bytes from one file to the other.
-	close (read_fd);
-	sendMessageToClient(0, (char)(EOF));
+	//sendMessageToClient(0, (char)(EOF));
 
 	
 	// send signal
@@ -221,7 +253,10 @@ void server::notifyClientToReloadOldWeights(int id){
 	
 	// send signal
 	// the first process in that IP
-	sendMessageToClient(0, (char)(COPY_OLD + '0'));
+	for(int i = 0; i < m_clientInfos.size(); i++){
+		if(m_clientInfos[i].isFirst()) sendMessageToClient(i, (char)(COPY_OLD + '0'));
+	}
+	//sendMessageToClient(0, (char)(COPY_OLD + '0'));
 }	
 
 void server::sendMessageToClient(int id, char command){

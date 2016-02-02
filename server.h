@@ -30,9 +30,13 @@ public:
 	int getFD();
 	string getIP();
 	
+	void setIsFirst(bool isFirst);
+	bool isFirst();
+	
 private:
 	string clientIP;
 	int clientFD;
+	bool m_isFirstInIP; // is the first process in that IP
 };
 
 class server
