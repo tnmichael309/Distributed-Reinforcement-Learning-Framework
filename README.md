@@ -1,1 +1,2 @@
 # Distributed-Reinforcement-Learning-Framework
+A distributed framework based on google deepmind paper [Massively Parallel Methods for Deep Reinforcement Learning](https://8109f4a4-a-62cb3a1a-s-sites.googlegroups.com/site/deeplearning2015/1.pdf?attachauth=ANoY7cpZaQ5ZHAVClwmf4WyaX8zY-Y0Nh2nhGY-FZpzRQl0U7UGVNZvoJXBMKxRkx-w6kOalw3HLXBb90ZJDQBa2xdHu84Y041RBfjctqSxxKxx1g3nvtVeKXtlC4mkrMw5eEf21yiV2NBWQF0tC1KsEF50Kpf57BlocVcKg4emJ6LviE7AYFerozcM87zFqu1nh7MZq-14KN6BLQFYw3FgR1JwREYVyAQ%3D%3D&attredirects=2).
