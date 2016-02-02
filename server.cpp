@@ -30,9 +30,11 @@ server::server(){
 
 server::~server(){;}
 
+//
+// Server start position
+//
 void server::start(int port)
 {
-
 	init_parameters();
 	
 	fd_set rfds; /* read file descriptor set */
@@ -174,7 +176,11 @@ void server::incrementDescentCount(){
 	m_descentCount = m_descentCount % SYNC_OLD_COUNT;
 }
 
-// accelerate????
+///
+/// Notice the client that server is going to send new weights.
+/// This function should be called after gradient decent is finished.
+/// The transfer file part might has space to optimize (splice, tee)
+///
 void server::updateClientWithNewWeights(int id){
 	// send new weights to client
 	
@@ -199,6 +205,12 @@ void server::updateClientWithNewWeights(int id){
 		sendMessageToClient(i, (char)(RELOAD_NEW + '0'));
 	}
 }
+
+///
+/// Notice the client that server has done N gradient decents
+/// client should copy current weights as old weights.
+/// This function should be called after N gradient decents are finished.
+///
 
 void server::notifyClientToReloadOldWeights(int id){
 	
@@ -225,6 +237,10 @@ void server::sendMessageToClient(int id, char command){
 	close(tempStdoutFd);
 }
 
+///
+/// Tell the client to load the new weights.
+/// If the client is the first process of the ip, then tell it to copy the weights as old.
+///
 void server::initClient(int id){
 	sendMessageToClient(id, (char)(RELOAD_NEW + '0'));
 	

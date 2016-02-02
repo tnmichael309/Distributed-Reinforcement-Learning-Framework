@@ -58,9 +58,13 @@ int readline(int fd, char *ptr, int maxlen)
 	return n;
 }
 
+///
+///	Handle the message from server and act accordingly
+///
 void handleCommand(int fd, int commandType){
 
 	cerr << "receive command: " << commandType << endl;
+	// copy new weights as old weights
 	if(commandType == (int)COPY_OLD){
 		int read_fd;
 		int write_fd;
@@ -76,7 +80,9 @@ void handleCommand(int fd, int commandType){
 		close (read_fd);
 		close (write_fd);
 		
-	}else if(commandType == (int)RELOAD_NEW){
+	}
+	// load new weights
+	else if(commandType == (int)RELOAD_NEW){
 		
 		int read_fd;
 		read_fd = open (WEIGHT_FILE_NAME.c_str(), O_RDONLY);
@@ -90,7 +96,9 @@ void handleCommand(int fd, int commandType){
 		}
 		close(read_fd);
 		
-	}else if(commandType == (int)UPDATE_NEW){
+	}
+	// server has done gradient decent, client needs to read new weights from socket
+	else if(commandType == (int)UPDATE_NEW){
 	
 		int write_fd;
 		write_fd = open (WEIGHT_FILE_NAME.c_str(), O_WRONLY | O_CREAT, 0666);
